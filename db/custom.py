@@ -86,6 +86,7 @@ class CUSTOM(DETECTION):
         self.transform = iaa.Sequential([iaa.Sometimes(then_list=augmentations, p=self.aug_chance), transformations])
 
         self._load_data()
+        print(self._image_file)
 
         self._db_inds = np.arange(len(self._image_ids))
 
