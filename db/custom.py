@@ -40,10 +40,10 @@ IMAGENET_MEAN = np.array([0.485, 0.456, 0.406])
 IMAGENET_STD = np.array([0.229, 0.224, 0.225])
 
 class CUSTOM(DETECTION):
-    def __init__(self, db_config, split):
+    def __init__(self, db_config, split): # split is the --split cmd arg
         super(CUSTOM, self).__init__(db_config)
-        data_dir     = system_configs.data_dir
-        cache_dir    = system_configs.cache_dir
+        data_dir     = system_configs.data_dir  # ./raws (from ./config/LSTR.json)
+        cache_dir    = system_configs.cache_dir # ./cache (from ./config/LSTR.json)
         max_lanes    = system_configs.max_lanes
         self.metric  = 'default'
         inp_h, inp_w = db_config['input_size']
@@ -66,7 +66,7 @@ class CUSTOM(DETECTION):
         if max_lanes is not None:
             self.max_lanes = max_lanes
 
-        self._data = "custom"
+        self._data = "custom"   # name of the file in ./cache (custom.pkl)
         self._mean = np.array([0.40789654, 0.44719302, 0.47026115], dtype=np.float32)
         self._std = np.array([0.28863828, 0.27408164, 0.27809835], dtype=np.float32)
         self._eig_val = np.array([0.2141788, 0.01817699, 0.00341571], dtype=np.float32)
@@ -95,7 +95,7 @@ class CUSTOM(DETECTION):
             print("No cache file found...")
             self._extract_data()
             self._transform_annotations()
-            with open(self._cache_file, "wb") as f:
+            with open(self._cache_file, "wb") as f: # write to custom.pkl
                 pickle.dump([self._annotations,
                              self._image_ids,
                              self._image_file,
@@ -338,8 +338,8 @@ class CUSTOM(DETECTION):
 
         return img
 
-    def eval(self, exp_dir, predictions, runtimes, label=None, only_metrics=False):
-        eval_dir = os.path.join(exp_dir, 'eval_results')
+    def eval(self, exp_dir, predictions, runtimes, label=None, only_metrics=False): # exp_dir = "./results"
+        eval_dir = os.path.join(exp_dir, 'eval_results')    # eval_dir = "./results/eval_results"
         os.makedirs(os.path.dirname(eval_dir), exist_ok=True)
         for idx, pred in enumerate(tqdm(predictions, ncols=67, desc="Generating points...")):
             output = self.get_prediction_string(pred)
@@ -357,10 +357,21 @@ class CUSTOM(DETECTION):
             if lane[0] == 0:
                 continue
             lane = lane[1:]
+            # lower = alpha, upper = beta (could also be vice-versa)
             lower, upper = lane[0], lane[1]
             lanepoly = lane[2:]
+            # get (num=)10 evenly spaced points within the interval [lower, upper]
             ys = np.linspace(lower, upper, num=10)
+            # scale those points acc. to image height
             lane_ys = (ys * self.img_h).astype(int).tolist()
+            # lanepoly[0] = k"
+            # lanepoly[1] = f"
+            # lanepoly[2] = m"
+            # lanepoly[3] = n'
+            # lanepoly[4] = b"
+            # lanepoly[5] = b'
+            # ys = v'
+            # xs = u'
             # Calculate the predicted xs
             lane_xs = (lanepoly[0] / (ys - lanepoly[1]) ** 2 +
                        lanepoly[2] / (ys - lanepoly[1]) +
@@ -369,6 +380,7 @@ class CUSTOM(DETECTION):
                        lanepoly[5]) * self.img_w
             lane_xs = lane_xs[(lane_xs > 0) & (lane_xs < self.img_w)].tolist()
             lane_xs, lane_ys = lane_xs[::-1], lane_ys[::-1]
+            # where numbers are being formatted to print to evaluation output
             lane_str = ' '.join(['{:.5f} {:.5f}'.format(x, y) for x, y in zip(lane_xs, lane_ys)])
             if lane_str != '':
                 out.append(lane_str)

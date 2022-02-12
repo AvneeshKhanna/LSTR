@@ -40,7 +40,11 @@ def parse_args():
                         default=1, type=int)
     parser.add_argument("--debugEnc", action="store_true")
     parser.add_argument("--debugDec", action="store_true")
+
+    # would create args as dict with keys tesiter, split, image_root etc. with
+    # values as those input by user via cmd
     args = parser.parse_args()
+
     return args
 
 def make_dirs(directories):
@@ -55,7 +59,7 @@ def test(db, split, testiter,
     result_dir = os.path.join(result_dir, str(testiter), split)
 
     if suffix is not None:
-        result_dir = os.path.join(result_dir, suffix)
+        result_dir = os.path.join(result_dir, suffix)   # result_dir = "./results"
 
     make_dirs([result_dir])
     test_iter = system_configs.max_iter if testiter is None else testiter
@@ -113,13 +117,14 @@ if __name__ == "__main__":
         "training": train_split,
         "validation": val_split,
         "testing": test_split
-    }[args.split]
+    }[args.split]   # args.split is the --split cmd arg by user
 
     print("loading all datasets...")
-    dataset = system_configs.dataset
+    dataset = system_configs.dataset    # system_configs.dataset == "CUSTOM"
     print("split: {}".format(split))  # test
 
-    testing_db = datasets[dataset](configs["db"], split)
+    # calls ./db/custom.py -> __init__()
+    testing_db = datasets[dataset](configs["db"], split)    # datasets[dataset] == datasets["CUSTOM"]
 
     # print("system config...")
     # pprint.pprint(system_configs.full)

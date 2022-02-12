@@ -8,7 +8,7 @@ EXPS_DIR = 'experiments'
 
 
 class Evaluator(object):
-    def __init__(self, dataset, exp_dir, poly_degree=3):
+    def __init__(self, dataset, exp_dir, poly_degree=3):    # exp_dir = "./results"
         self.dataset = dataset
         # self.predictions = np.zeros((len(dataset.annotations), dataset.max_lanes, 4 + poly_degree))
         self.predictions = None

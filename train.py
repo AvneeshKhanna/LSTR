@@ -209,10 +209,10 @@ if __name__ == "__main__":
     configs["system"]["snapshot_name"] = args.cfg_file  # CornerNet
     system_configs.update_config(configs["system"])
 
-    train_split = system_configs.train_split
-    val_split   = system_configs.val_split
+    train_split = system_configs.train_split    # train_split = "train"
+    val_split   = system_configs.val_split      # val_split = "test"
 
-    dataset = system_configs.dataset  # MSCOCO | FVV
+    dataset = system_configs.dataset  # MSCOCO | FVV    # dataset = "CUSTOM"
     print("loading all datasets {}...".format(dataset))
 
     threads = args.threads  # 4 every 4 epoch shuffle the indices

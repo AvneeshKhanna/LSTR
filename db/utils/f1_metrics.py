@@ -95,7 +95,7 @@ def load_fld_data(data_dir):
     datas = []
     names = os.listdir(data_dir)
     for name in names:
-        path = os.path.join(data_dir, name)
+        path = os.path.join(data_dir, name) # path = "./results/eval_results/..."
         img_data = load_culane_img_data(path)
         datas.append([img_data, name])
     return datas, names
@@ -109,7 +109,7 @@ def load_fld_gt(data_dir, names):
     return datas
 
 
-def eval_predictions(anno_dir, pred_dir, width=30, official=True, sequential=False, label=None):
+def eval_predictions(anno_dir, pred_dir, width=30, official=True, sequential=False, label=None):    # pred_dir = "./results/eval_results"
     print('Loading prediction data...')
     predictions, names = load_fld_data(pred_dir)
     print('Loading annotation data...')
