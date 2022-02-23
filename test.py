@@ -79,6 +79,7 @@ def test(db, split, testiter,
         print('static evaluating...')
         test_file = "test.custom"
         testing = importlib.import_module(test_file).testing
+        # call to testing(db, nnet, result_dir, debug=False, evaluator=.....) in test/custom.py
         testing(db, nnet, result_dir, debug=debug, evaluator=evaluator, repeat=batch,
                 debugEnc=debugEnc, debugDec=debugDec)
 
