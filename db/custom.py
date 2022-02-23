@@ -58,6 +58,8 @@ class CUSTOM(DETECTION):
         self.aug_chance = 0.9090909090909091
         self._image_file = []
 
+        # data augmentation pipelines
+        # TODO: {'height': 648, 'width': 1152} irrelevant for 256x256 images
         self.augmentations = [{'name': 'Affine', 'parameters': {'rotate': (-10, 10)}},
                               {'name': 'HorizontalFlip', 'parameters': {'p': 0.5}},
                               {'name': 'CropToFixedSize', 'parameters': {'height': 648, 'width': 1152}}]
@@ -92,6 +94,9 @@ class CUSTOM(DETECTION):
 
         self._db_inds = np.arange(len(self._image_ids))
 
+    # loads data into self._annotations, self._image_ids, self._image_file, self.max_lanes, self.max_points
+    # from cache file. If cache file absent, calls self._extract_data(), self._transform_annotations() to
+    # load the data.
     def _load_data(self):
         if not os.path.exists(self._cache_file):
             print("No cache file found...")
@@ -170,12 +175,14 @@ class CUSTOM(DETECTION):
         }
         return new_anno
 
+    # looping over _old_annotations to call _transform_annotation() on each
     def _transform_annotations(self):
         print('Now transforming annotations...')
         self._annotations = {}
         for image_id, old_anno in self._old_annotations.items():
             self._annotations[image_id] = self._transform_annotation(old_anno)
 
+    # returns self._annotations[i] from index i of self._image_ids
     def detections(self, ind):
         image_id  = self._image_ids[ind]
         item      = self._annotations[image_id]
@@ -184,7 +191,8 @@ class CUSTOM(DETECTION):
     def __len__(self):
         return len(self._annotations)
 
-    def pred2lanes(self, path, pred, y_samples):
+
+    def pred2lanes(self, path, pred, y_samples):    # function not being used anwyhere
         ys = np.array(y_samples) / self.img_h
         lanes = []
         for lane in pred:
@@ -343,11 +351,15 @@ class CUSTOM(DETECTION):
 
         return img
 
-    # TODO: Modify for saving poly coefficients
     def eval(self, exp_dir, predictions, runtimes, label=None, only_metrics=False): # exp_dir = "./results"
-        eval_dir = os.path.join(exp_dir, 'eval_results')    # eval_dir = "./results/LSTR/../testing/eval_results"
-        eval_poly_dir = os.path.join(exp_dir, 'eval_poly_results')  # eval_poly_dir = "./results/LSTR/../testing/eval_poly_results"
+        # eval_dir = "./results/LSTR/../testing/eval_results"
+        eval_dir = os.path.join(exp_dir, 'eval_results')
         os.makedirs(os.path.dirname(eval_dir), exist_ok=True)
+        # eval_poly_dir = "./results/LSTR/../testing/eval_poly_results"
+        eval_poly_dir = os.path.join(exp_dir, 'eval_poly_results')
+        os.makedirs(os.path.dirname(eval_poly_dir), exist_ok=True)
+
+        # loop through predicted lane coefficients
         for idx, pred in enumerate(tqdm(predictions, ncols=67, desc="Generating points...")):
             # get prediction string and poly_coeffs string
             output, poly_output = self.get_prediction_string(pred)
@@ -378,7 +390,8 @@ class CUSTOM(DETECTION):
 
         return f1_metric.eval_predictions(self.anno_root, eval_dir, width=30, official=True, sequential=False)
 
-    # TODO: Modify for extracting poly coefficients
+    # Method to create (x, y) points from lane coefficients. Returns both (x, y) points and
+    # lane coefficients.
     def get_prediction_string(self, pred):
         out = []
         poly_coeffs = []    # list of set of coefficients for each lane

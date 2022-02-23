@@ -127,7 +127,12 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
                 enc_attn_weights = enc_attn_weights[0]
                 dec_attn_weights = dec_attn_weights[0]
 
-            results = postprocessors['curves'](outputs, orig_target_sizes)
+            start_pred_time = int(time.time_ns() * (10**6))
+
+            results = postprocessors['curves'](outputs, orig_target_sizes)  # (probably) call for prediction
+
+            end_pred_time = int(time.time_ns() * (10 ** 6))
+            print(f"Predicted in {end_pred_time - start_pred_time} ms")
 
             if evaluator is not None:
                 evaluator.add_prediction(ind, results.cpu().numpy(), t / repeat)
