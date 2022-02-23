@@ -51,7 +51,7 @@ class CUSTOM(DETECTION):
         self.image_root = os.path.join(data_dir, '{}_images'.format(split))
         self.anno_root  = os.path.join(data_dir, '{}_labels'.format(split))
 
-        self.img_w, self.img_h = 1280, 720  # custom original image resolution
+        self.img_w, self.img_h = 256, 256  # custom original image resolution
         self.max_points = 0
         self.normalize = True
         self.to_tensor = ToTensor()
@@ -361,7 +361,7 @@ class CUSTOM(DETECTION):
             lower, upper = lane[0], lane[1]
             lanepoly = lane[2:]
             # get (num=)10 evenly spaced points within the interval [lower, upper]
-            ys = np.linspace(lower, upper, num=10)
+            ys = np.linspace(lower, upper, num=25)
             # scale those points acc. to image height
             lane_ys = (ys * self.img_h).astype(int).tolist()
             # lanepoly[0] = k"
