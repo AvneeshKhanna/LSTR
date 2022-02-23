@@ -70,7 +70,7 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
 
     postprocessors = {'curves': PostProcess()}
 
-    total_pred_time = 0  # stores total prediction time
+    start_pred_time = int(time.time() * (10**6))  # start prediction time
 
     for ind in tqdm(range(0, num_images), ncols=67, desc="locating kps"):
         db_ind        = db_inds[ind]
@@ -129,12 +129,7 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
                 enc_attn_weights = enc_attn_weights[0]
                 dec_attn_weights = dec_attn_weights[0]
 
-            start_pred_time = int(time.time() * (10**6))
-
             results = postprocessors['curves'](outputs, orig_target_sizes)  # (probably) call for prediction
-
-            end_pred_time = int(time.time() * (10**6))
-            total_pred_time += end_pred_time - start_pred_time
 
             if evaluator is not None:
                 evaluator.add_prediction(ind, results.cpu().numpy(), t / repeat)
@@ -217,7 +212,8 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
                                          + img_lst[-2] + '_'
                                          + os.path.basename(image_file[:-4]) + '.jpg'), preds)
 
-    print(f'Total prediction time {int(total_pred_time / 1000.0)} ms')
+    end_pred_time = int(time.time() * (10 ** 6))
+    print(f'Total prediction time {int((end_pred_time - start_pred_time) / 1000.0)} ms')
 
     if not debug:
         exp_name = 'custom'
