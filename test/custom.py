@@ -81,6 +81,8 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
         height, width = image.shape[0:2]
         # item  = db.detections(db_ind) # all in the raw coordinate
 
+        total_pred_time = 0 # stores total prediction time
+
         for scale in multi_scales:
             images = np.zeros((1, 3, input_size[0], input_size[1]), dtype=np.float32)
             masks = np.ones((1, 1, input_size[0], input_size[1]), dtype=np.float32)
@@ -127,15 +129,17 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
                 enc_attn_weights = enc_attn_weights[0]
                 dec_attn_weights = dec_attn_weights[0]
 
-            start_pred_time = int(time.time() * 1000)
+            start_pred_time = int(time.time() * (10**6))
 
             results = postprocessors['curves'](outputs, orig_target_sizes)  # (probably) call for prediction
 
-            end_pred_time = int(time.time() * 1000)
-            print(f"Predicted in {end_pred_time - start_pred_time} ms")
+            end_pred_time = int(time.time() * (10**6))
+            total_pred_time += end_pred_time - start_pred_time
 
             if evaluator is not None:
                 evaluator.add_prediction(ind, results.cpu().numpy(), t / repeat)
+
+        print(f'Total prediction time {int(total_pred_time/1000.0)} ms')
 
         if debug:
             img_lst = image_file.split('/')
