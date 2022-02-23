@@ -411,11 +411,11 @@ class CUSTOM(DETECTION):
             lane_xs, lane_ys = lane_xs[::-1], lane_ys[::-1]
             # where numbers are being formatted to print to evaluation output
             lane_str = ' '.join(['{:.5f} {:.5f}'.format(x, y) for x, y in zip(lane_xs, lane_ys)])
-            # create poly-coeffs str for the lane
-            poly_str = ' '.join(['{:.5f}'.format(coeff) for coeff in lanepoly[:6]]) + \
+            # create poly-coeffs str for the lane by scaling all lanepoly[i] by self.img_w except lanepoly[1] (i.e., f")
+            poly_str = ' '.join(['{:.5f}'.format(coeff * self.img_w) if i != 1 else '{:.5f}'.format(coeff) for i, coeff in enumerate(lanepoly[:6])]) + \
                        ' ' + \
-                       '{:.5f}'.format(lower) + ' ' +\
-                       '{:.5f}'.format(upper)
+                       '{:.5f}'.format(lower * self.img_h) + ' ' +\
+                       '{:.5f}'.format(upper * self.img_h)
             if lane_str != '':
                 out.append(lane_str)
                 poly_coeffs.append(poly_str)    # append poly_str to poly_coeffs list
