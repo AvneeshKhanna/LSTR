@@ -70,6 +70,8 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
 
     postprocessors = {'curves': PostProcess()}
 
+    total_pred_time = 0  # stores total prediction time
+
     for ind in tqdm(range(0, num_images), ncols=67, desc="locating kps"):
         db_ind        = db_inds[ind]
         # image_id      = db.image_ids(db_ind)
@@ -80,8 +82,6 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
 
         height, width = image.shape[0:2]
         # item  = db.detections(db_ind) # all in the raw coordinate
-
-        total_pred_time = 0 # stores total prediction time
 
         for scale in multi_scales:
             images = np.zeros((1, 3, input_size[0], input_size[1]), dtype=np.float32)
@@ -138,8 +138,6 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
 
             if evaluator is not None:
                 evaluator.add_prediction(ind, results.cpu().numpy(), t / repeat)
-
-        print(f'Total prediction time {int(total_pred_time/1000.0)} ms')
 
         if debug:
             img_lst = image_file.split('/')
@@ -218,6 +216,8 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
                 cv2.imwrite(os.path.join(lane_debug_dir, img_lst[-3] + '_'
                                          + img_lst[-2] + '_'
                                          + os.path.basename(image_file[:-4]) + '.jpg'), preds)
+
+    print(f'Total prediction time {int(total_pred_time / 1000.0)} ms')
 
     if not debug:
         exp_name = 'custom'
