@@ -412,8 +412,8 @@ class CUSTOM(DETECTION):
             lane_str = ' '.join(['{:.5f} {:.5f}'.format(x, y) for x, y in zip(lane_xs, lane_ys)])
             # create poly-coeffs str for the lane
             poly_str = ' '.join(['{:.5f}'.format(coeff) for coeff in lanepoly[:6]]) +\
-                       lower + ' ' +\
-                       upper
+                       '{:.5f}'.format(lower) + ' ' +\
+                       '{:.5f}'.format(upper)
             if lane_str != '':
                 out.append(lane_str)
                 poly_coeffs.append(poly_str)    # append poly_str to poly_coeffs list
