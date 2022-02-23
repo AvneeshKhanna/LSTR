@@ -345,7 +345,8 @@ class CUSTOM(DETECTION):
 
     # TODO: Modify for saving poly coefficients
     def eval(self, exp_dir, predictions, runtimes, label=None, only_metrics=False): # exp_dir = "./results"
-        eval_dir = os.path.join(exp_dir, 'eval_results')    # eval_dir = "./results/eval_results"
+        eval_dir = os.path.join(exp_dir, 'eval_results')    # eval_dir = "./results/LSTR/../testing/eval_results"
+        eval_poly_dir = os.path.join(exp_dir, 'eval_poly_results')  # eval_poly_dir = "./results/LSTR/../testing/eval_poly_results"
         os.makedirs(os.path.dirname(eval_dir), exist_ok=True)
         for idx, pred in enumerate(tqdm(predictions, ncols=67, desc="Generating points...")):
             # get prediction string and poly_coeffs string
@@ -368,7 +369,7 @@ class CUSTOM(DETECTION):
             # set output file name
             poly_output_filename = img_name[:-4] + '-poly' + '.txt'
             # set output file path
-            poly_output_filepath = os.path.join(eval_dir, poly_output_filename)
+            poly_output_filepath = os.path.join(eval_poly_dir, poly_output_filename)
             # create output file path directory
             os.makedirs(os.path.dirname(poly_output_filepath), exist_ok=True)
             # write predicted poly string to file
@@ -411,7 +412,8 @@ class CUSTOM(DETECTION):
             # where numbers are being formatted to print to evaluation output
             lane_str = ' '.join(['{:.5f} {:.5f}'.format(x, y) for x, y in zip(lane_xs, lane_ys)])
             # create poly-coeffs str for the lane
-            poly_str = ' '.join(['{:.5f}'.format(coeff) for coeff in lanepoly[:6]]) +\
+            poly_str = ' '.join(['{:.5f}'.format(coeff) for coeff in lanepoly[:6]]) + \
+                       ' ' + \
                        '{:.5f}'.format(lower) + ' ' +\
                        '{:.5f}'.format(upper)
             if lane_str != '':
