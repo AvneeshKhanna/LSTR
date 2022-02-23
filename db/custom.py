@@ -44,12 +44,12 @@ class CUSTOM(DETECTION):
         super(CUSTOM, self).__init__(db_config)
         data_dir     = system_configs.data_dir  # ./raws (from ./config/LSTR.json)
         cache_dir    = system_configs.cache_dir # ./cache (from ./config/LSTR.json)
-        max_lanes    = system_configs.max_lanes
+        max_lanes    = system_configs.max_lanes # sets attribute "max_lanes" (if present) from /config/LSTR.json
         self.metric  = 'default'
         inp_h, inp_w = db_config['input_size']
 
-        self.image_root = os.path.join(data_dir, '{}_images'.format(split))
-        self.anno_root  = os.path.join(data_dir, '{}_labels'.format(split))
+        self.image_root = os.path.join(data_dir, '{}_images'.format(split)) # ./raws/{}_images/
+        self.anno_root  = os.path.join(data_dir, '{}_labels'.format(split)) # ./raws/{}_labels/
 
         self.img_w, self.img_h = 256, 256  # custom original image resolution
         self.max_points = 0
@@ -78,10 +78,12 @@ class CUSTOM(DETECTION):
 
         self._cache_file = os.path.join(cache_dir, "{}.pkl".format(self._data, self._split))
 
+        # for data augmentation (most probably)
         if self.augmentations is not None:
             augmentations = [getattr(iaa, aug['name'])(**aug['parameters'])
                              for aug in self.augmentations]  # add augmentation
 
+        # for data augmentation (most probably)
         transformations = iaa.Sequential([Resize({'height': inp_h, 'width': inp_w})])
         self.transform = iaa.Sequential([iaa.Sometimes(then_list=augmentations, p=self.aug_chance), transformations])
 
@@ -110,6 +112,8 @@ class CUSTOM(DETECTION):
                  self.max_lanes,
                  self.max_points) = pickle.load(f)
 
+    # function to extract GT annotations/labels and images from '/raws/{}_labels' and '/raws/{}_images'
+    # and set data in self._old_annotations
     def _extract_data(self):
         max_lanes = 0
         image_id  = 0
@@ -138,6 +142,7 @@ class CUSTOM(DETECTION):
             }
             image_id += 1
 
+    # converting from old-annotations (from _extract_data()) to new-annotations
     def _transform_annotation(self, anno, img_wh=None):
         if img_wh is None:
             img_h, img_w = self.img_h, self.img_w
@@ -338,21 +343,44 @@ class CUSTOM(DETECTION):
 
         return img
 
+    # TODO: Modify for saving poly coefficients
     def eval(self, exp_dir, predictions, runtimes, label=None, only_metrics=False): # exp_dir = "./results"
         eval_dir = os.path.join(exp_dir, 'eval_results')    # eval_dir = "./results/eval_results"
         os.makedirs(os.path.dirname(eval_dir), exist_ok=True)
         for idx, pred in enumerate(tqdm(predictions, ncols=67, desc="Generating points...")):
-            output = self.get_prediction_string(pred)
+            # get prediction string and poly_coeffs string
+            output, poly_output = self.get_prediction_string(pred)
+
+            # ------- save predicted labels -------
+            # get image file name
             img_name = os.path.basename(self._annotations[idx]['old_anno']['path'])
+            # set output file name
             output_filename = img_name[:-4] + '.txt'
+            # set output file path
             output_filepath = os.path.join(eval_dir, output_filename)
+            # create output file path directory
             os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
+            # write prediction string to file
             with open(output_filepath, 'w') as out_file:
                 out_file.write(output)
+
+            # ------- save predicted poly coeffs -------
+            # set output file name
+            poly_output_filename = img_name[:-4] + '-poly' + '.txt'
+            # set output file path
+            poly_output_filepath = os.path.join(eval_dir, poly_output_filename)
+            # create output file path directory
+            os.makedirs(os.path.dirname(poly_output_filepath), exist_ok=True)
+            # write predicted poly string to file
+            with open(poly_output_filepath, 'w') as poly_out_file:
+                poly_out_file.write(poly_output)
+
         return f1_metric.eval_predictions(self.anno_root, eval_dir, width=30, official=True, sequential=False)
 
+    # TODO: Modify for extracting poly coefficients
     def get_prediction_string(self, pred):
         out = []
+        poly_coeffs = []    # list of set of coefficients for each lane
         for lane in pred:
             if lane[0] == 0:
                 continue
@@ -382,9 +410,14 @@ class CUSTOM(DETECTION):
             lane_xs, lane_ys = lane_xs[::-1], lane_ys[::-1]
             # where numbers are being formatted to print to evaluation output
             lane_str = ' '.join(['{:.5f} {:.5f}'.format(x, y) for x, y in zip(lane_xs, lane_ys)])
+            # create poly-coeffs str for the lane
+            poly_str = ' '.join(['{:.5f}'.format(coeff) for coeff in lanepoly[:6]]) +\
+                       lower + ' ' +\
+                       upper
             if lane_str != '':
                 out.append(lane_str)
-        return '\n'.join(out)
+                poly_coeffs.append(poly_str)    # append poly_str to poly_coeffs list
+        return '\n'.join(out), '\n'.join(poly_coeffs)
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
