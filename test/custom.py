@@ -226,5 +226,7 @@ def kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
 
 def testing(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
             debugEnc=False, debugDec=False):
+    # call to kp_detection(db, nnet, result_dir, debug=False, evaluator=None, repeat=1,
+    #                  isEncAttn=....) in this file
     return globals()[system_configs.sampling_function](db, nnet, result_dir, debug=debug, evaluator=evaluator,
                                                        repeat=repeat, isEncAttn=debugEnc, isDecAttn=debugDec)
