@@ -78,7 +78,8 @@ class CUSTOM(DETECTION):
             [-0.56089297, 0.71832671, 0.41158938]
         ], dtype=np.float32)
 
-        self._cache_file = os.path.join(cache_dir, "{}.pkl".format(self._data, self._split))
+        # self._cache_file = os.path.join(cache_dir, "{}.pkl".format(self._data, self._split))
+        self._cache_file = os.path.join(cache_dir, "{}_{}.pkl".format(self._data, split))
 
         # for data augmentation (most probably)
         if self.augmentations is not None:
