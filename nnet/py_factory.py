@@ -2,13 +2,13 @@ import os
 import torch
 import importlib
 import torch.nn as nn
-from torch.cuda.amp import GradScaler, autocast
+# from torch.cuda.amp import GradScaler, autocast
 from thop import profile, clever_format
 from config import system_configs
 from models.py_utils.data_parallel import DataParallel
 
 torch.manual_seed(317)
-scaler = torch.cuda.amp.GradScaler()
+# scaler = torch.cuda.amp.GradScaler()
 
 class Network(nn.Module):
     def __init__(self, model, loss):
@@ -110,31 +110,31 @@ class NetworkFactory(object):
         ys = [y.cuda(non_blocking=True) for y in ys]
 
         self.optimizer.zero_grad()
-        with autocast():
-            loss_kp = self.network(iteration,
-                                   save,
-                                   viz_split,
-                                   xs,
-                                   ys)
+        # with autocast():
+        loss_kp = self.network(iteration,
+                               save,
+                               viz_split,
+                               xs,
+                               ys)
 
         loss      = loss_kp[0]
         loss_dict = loss_kp[1:]
         loss      = loss.mean()
 
-        # loss.backward()
-        # self.optimizer.step()
+        loss.backward()
+        self.optimizer.step()
 
         # Scales loss.  Calls backward() on scaled loss to create scaled gradients.
         # Backward passes under autocast are not recommended.
         # Backward ops run in the same dtype autocast chose for corresponding forward ops.
-        scaler.scale(loss).backward()
+        # scaler.scale(loss).backward()
 
         # scaler.step() first unscales the gradients of the optimizer's assigned params.
         # If these gradients do not contain infs or NaNs, optimizer.step() is then called,
         # otherwise, optimizer.step() is skipped.
-        scaler.step(self.optimizer)
+        # scaler.step(self.optimizer)
 
-        scaler.update()  # Updates the scale for next iteration.
+        # scaler.update()  # Updates the scale for next iteration.
 
         return loss, loss_dict
 
